@@ -59,6 +59,22 @@ pub const s_ok: HRESULT = HRESULT.S_OK;
 /// those call sites would read as a mistake.
 pub const s_false: HRESULT = .fromInt(1);
 
+/// `E_NOTFOUND` as the Core Audio headers define it: `HRESULT_FROM_WIN32(
+/// ERROR_NOT_FOUND)`, `0x80070490`. It is what `GetDefaultAudioEndpoint`
+/// returns on a machine with no endpoint in that direction.
+///
+/// **Not** `win32.E_NOTFOUND`. The bindings have exactly one constant by that
+/// name, and it is HTML Help's, `0x8000100D` -- a different code that no audio
+/// interface returns. Matching on it made a machine with no sound card look
+/// like an `Unexpected` failure rather than the ordinary answer it is.
+pub const e_notfound: HRESULT = fromWin32(@intFromEnum(win32.ERROR_NOT_FOUND));
+
+/// `HRESULT_FROM_WIN32`: a Win32 error code carried in an `HRESULT`, with the
+/// failure bit set and `FACILITY_WIN32` (7) as the facility.
+fn fromWin32(code: u32) HRESULT {
+    return .fromInt(0x8007_0000 | (code & 0xFFFF));
+}
+
 /// An `HRESULT` as its underlying bit pattern, for comparison and `switch`.
 pub fn int(hr: HRESULT) u32 {
     return @bitCast(hr);
@@ -121,7 +137,7 @@ fn classify(hr: HRESULT) errors.Error {
         => error.UnsupportedFormat,
 
         int(win32.AUDCLNT_E_ENDPOINT_CREATE_FAILED),
-        int(win32.E_NOTFOUND),
+        int(e_notfound),
         => error.DeviceNotFound,
 
         // How a system too old for an interface says so, which every fallback
@@ -192,6 +208,23 @@ test "the failures a running program has to cope with are distinguished" {
         error.Unsupported,
         check("too old a Windows", win32.E_NOINTERFACE),
     );
+}
+
+test "no endpoint is DeviceNotFound, by the code Windows actually returns" {
+    // 0x80070490 is what `GetDefaultAudioEndpoint` said on a hosted Windows
+    // runner with no sound card. Written out as a number rather than through
+    // `e_notfound`, so that this checks the constant as well as the mapping.
+    try std.testing.expectEqual(@as(u32, 0x8007_0490), int(e_notfound));
+    try std.testing.expectError(
+        error.DeviceNotFound,
+        check("no sound card", HRESULT.fromInt(0x8007_0490)),
+    );
+}
+
+test "the bindings' E_NOTFOUND is HTML Help's, not the one audio returns" {
+    // Pins the trap `e_notfound` exists to avoid. If this ever fails, the
+    // bindings have changed what the name means and the choice can be revisited.
+    try std.testing.expect(!eql(win32.E_NOTFOUND, e_notfound));
 }
 
 test "an unrecognised code is Unexpected rather than a wrong guess" {
