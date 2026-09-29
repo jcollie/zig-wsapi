@@ -44,7 +44,7 @@
 //! fixed by two decades of binary compatibility and are not going to move, and a
 //! test in `com/missing.zig` asserts each one against `zigwin32`'s own
 //! definition, so a typo here fails to compile the Windows build rather than
-//! quietly mis-ordering somebody's surround sound.
+//! quietly misordering somebody's surround sound.
 
 const std = @import("std");
 

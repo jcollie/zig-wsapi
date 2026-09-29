@@ -262,7 +262,7 @@ fn allocate(gpa: Allocator, options: Options) errors.OpenError!*Capture {
         .strings = strings_block,
         // Sized by the capture thread once the endpoint has said how many channels it
         // delivers. A queue built here would have to guess, and a `Ring` whose channel
-        // count is not the real one mis-frames every push and pop -- silently, since
+        // count is not the real one misframes every push and pop -- silently, since
         // the arithmetic still divides evenly.
         .ring = .empty,
         .stage = stage,
