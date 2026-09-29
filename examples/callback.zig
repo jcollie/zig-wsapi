@@ -77,7 +77,7 @@ pub fn main(init: std.process.Init) !void {
     var chord: Chord = .init(48000);
 
     const stream = try wasapi.Stream.open(gpa, io, .{
-        .name = "zig-windows-audio chord",
+        .name = "zig-wsapi chord",
         .channels = 2,
         .rate = 48000,
         .process = .{ .ctx = &chord, .func = &Chord.fill },

@@ -44,7 +44,7 @@ test "a tone played through a Stream comes back through a loopback Capture" {
     // -- otherwise the start of the tone is missed and the measurement is of less
     // audio than intended.
     const capture = wasapi.Capture.open(gpa, io, .{
-        .name = "zig-windows-audio loopback test",
+        .name = "zig-wsapi loopback test",
         .source = .loopback,
     }) catch |err| switch (err) {
         // No sound card, or none that can be opened: not a failure of this library.
@@ -61,7 +61,7 @@ test "a tone played through a Stream comes back through a loopback Capture" {
     try std.testing.expect(channels > 0);
 
     const stream = wasapi.Stream.open(gpa, io, .{
-        .name = "zig-windows-audio loopback test tone",
+        .name = "zig-wsapi loopback test tone",
         .channels = 2,
         .rate = rate,
     }) catch |err| switch (err) {

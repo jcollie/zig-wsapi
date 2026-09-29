@@ -98,7 +98,7 @@ pub const Process = struct {
 };
 
 pub const Options = struct {
-    name: []const u8 = "zig-windows-audio",
+    name: []const u8 = "zig-wsapi",
 
     source: Source = .microphone,
 
@@ -338,7 +338,7 @@ fn startKeeper(self: *Capture, io: std.Io) errors.OpenError!void {
     // contributing any audio, and `pause` is what tells Windows the stream wants to
     // exist without being scheduled.
     const keeper = try Stream.open(self.gpa, io, .{
-        .name = "zig-windows-audio loopback keeper",
+        .name = "zig-wsapi loopback keeper",
         .channels = 2,
         .rate = self.negotiated.rate,
         .target = id,

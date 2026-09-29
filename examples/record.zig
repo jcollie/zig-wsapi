@@ -39,7 +39,7 @@ pub fn main(init: std.process.Init) !void {
     const path = if (args.len > 2) args[2] else "record.wav";
 
     const capture = wasapi.Capture.open(gpa, io, .{
-        .name = "zig-windows-audio record",
+        .name = "zig-wsapi record",
         .source = .microphone,
     }) catch |err| switch (err) {
         error.AccessDenied => {

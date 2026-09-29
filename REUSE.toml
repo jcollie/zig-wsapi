@@ -1,5 +1,5 @@
 version = 1
-SPDX-PackageName = "zig-windows-audio"
+SPDX-PackageName = "zig-wsapi"
 SPDX-PackageSupplier = "Jeffrey C. Ollie <jeff@ocjtech.us>"
 SPDX-PackageDownloadLocation = "https://git.jcollie.dev/jeff/zig-wsapi"
 

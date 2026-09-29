@@ -42,7 +42,7 @@ pub fn main(init: std.process.Init) !void {
         2;
 
     const stream = try wasapi.Stream.open(gpa, io, .{
-        .name = "zig-windows-audio tone",
+        .name = "zig-wsapi tone",
         .channels = 2,
         .rate = 48000,
     });

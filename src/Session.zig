@@ -77,7 +77,7 @@ pub const Options = struct {
     /// Unused by Windows, which has nothing to show a control-plane client's name in.
     /// Kept so that the shape matches zig-pipewire's `Session.Options` and so a
     /// program moving between them does not have to delete the field.
-    name: []const u8 = "zig-windows-audio",
+    name: []const u8 = "zig-wsapi",
     log: ?Log = null,
 };
 

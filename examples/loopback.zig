@@ -40,7 +40,7 @@ pub fn main(init: std.process.Init) !void {
 
     // `.loopback` opens the *render* endpoint and reads what is being played to it.
     const capture = try wasapi.Capture.open(gpa, io, .{
-        .name = "zig-windows-audio loopback",
+        .name = "zig-wsapi loopback",
         .source = .loopback,
     });
     defer capture.close(io);

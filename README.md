@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: © 2026 Jeffrey C. Ollie <jeff@ocjtech.us>
 SPDX-License-Identifier: MIT
 -->
 
-# zig-windows-audio
+# zig-wsapi
 
 Play and record audio on Windows, from Zig, without linking a C library.
 
@@ -159,7 +159,7 @@ while (try sinks.next()) |endpoint| {
 If you know `zig-pipewire`, this is what moves and what does not. Windows has no
 user-visible audio graph, and most of the differences follow from that.
 
-| zig-pipewire | zig-windows-audio | |
+| zig-pipewire | zig-wsapi | |
 |---|---|---|
 | `Stream.open` / `close` | same | `io` is threaded through, as in zig-hidapi |
 | `write` / `writeAll` / `writable` / `queued` | same | |

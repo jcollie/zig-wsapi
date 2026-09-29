@@ -26,7 +26,7 @@ comptime {
 }
 
 const unsupported =
-    "zig-windows-audio speaks WASAPI, which only Windows has, and this is a build for " ++
+    "zig-wsapi speaks WASAPI, which only Windows has, and this is a build for " ++
     @tagName(builtin.os.tag) ++ ".\n\n" ++
     "There is no portable audio API behind this one to fall back on: this module is " ++
     "the Windows half of a pair, and the Linux half is zig-pipewire " ++

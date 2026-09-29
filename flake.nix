@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 {
-  description = "zig-windows-audio";
+  description = "zig-wsapi";
 
   inputs = {
     nixpkgs = {
@@ -53,7 +53,7 @@
         in
         {
           default = pkgs.mkShell {
-            name = "zig-windows-audio";
+            name = "zig-wsapi";
             nativeBuildInputs = [
               pkgs.git-pages-cli
               pkgs.pinact

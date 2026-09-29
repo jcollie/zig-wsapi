@@ -178,7 +178,7 @@ pub const Process = struct {
 /// minutes later -- so none of them has to outlive the call.
 pub const Options = struct {
     /// Shown in the Windows volume mixer.
-    name: []const u8 = "zig-windows-audio",
+    name: []const u8 = "zig-wsapi",
 
     /// Channels the caller will supply.
     channels: u16 = 2,
