@@ -1,0 +1,134 @@
+# SPDX-FileCopyrightText: © 2026 Jeffrey C. Ollie <jeff@ocjtech.us>
+# SPDX-License-Identifier: MIT
+
+# Actions are pinned to a commit, with the tag they came from in a trailing
+# comment, so that a moving tag cannot change what CI executes. These pins have
+# to be updated by hand: the pinact in the dev shell only understands bare
+# GitHub `owner/repo` references, and errors out on the full URLs that Forgejo
+# needs for actions hosted outside the instance.
+#
+# This is a Windows-only library on a Linux runner, so what the jobs here can
+# prove is bounded and worth stating: the `test` job runs the
+# operating-system-independent half, and `check` type-checks the COM half by
+# cross-compiling it for two Windows architectures without linking. Running any
+# of it needs the GitHub mirror's `windows-latest` runner, and hearing any of it
+# needs a person -- see the README.
+
+name: test
+
+# The workflow has to be on the default branch for the manual trigger to show
+# up in the UI, where it appears as a "Run workflow" button on the Actions tab.
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  reuse:
+    runs-on: nixos-do-s
+    steps:
+      - name: Check out
+        uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Every file needs an SPDX header and every license a file in LICENSES/,
+      # which is easy to forget when adding one. The version that runs here is
+      # whatever the flake's nixpkgs pins, so it moves with `nix flake update`
+      # rather than with whatever a release of the tool does on its own.
+      - name: Check REUSE compliance
+        run: nix develop -c reuse lint
+
+  test:
+    # Gated on the licensing check, so a missing SPDX header fails without
+    # spending three builds on the run.
+    needs: reuse
+    runs-on: nixos-do-s
+    # One job per optimize mode rather than three builds in sequence, so the
+    # three run concurrently and each gets its own budget -- a droplet is reaped
+    # at a two hour lifetime cap, and a serial run spends that budget three
+    # times over on one machine.
+    strategy:
+      matrix:
+        optimize: [Debug, ReleaseSafe, ReleaseFast]
+    steps:
+      - name: Check out
+        uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # No setup-zig step: the compiler comes from the flake's dev shell, which
+      # is the same one used locally, so CI cannot silently build with a
+      # different Zig than the one the tree was developed against.
+      #
+      # On a Linux runner `zig build test` runs the portable suite and nothing
+      # else -- `build.zig` only adds the COM tests for a Windows target. That
+      # suite is not small: the ring buffer under two-thread torture, the channel
+      # permutations against real channel masks, the `WAVEFORMATEXTENSIBLE`
+      # encoder against byte-exact golden headers, every sample conversion round
+      # trip, the performance-counter arithmetic across ten years of uptime, and
+      # the statistics handoff under a concurrent reader.
+      #
+      # ReleaseFast matters here more than it usually would: it drops the safety
+      # checks, and the sample converters are exactly the sort of arithmetic that
+      # traps in a safe build and wraps in a fast one.
+      - name: Test
+        run: |
+          nix develop -c zig version
+          nix develop -c zig build test -Doptimize=${{ matrix.optimize }} --summary all
+
+      # `zig-pkg` is where Zig materialises a fetched dependency, so once
+      # anything has built for Windows it holds tens of megabytes of generated
+      # Win32 bindings. `zig fmt` walks it happily and reports every one of them,
+      # and unlike `reuse` it does not honour `.gitignore`.
+      - name: Check Zig formatting compliance
+        run: nix develop -c zig fmt --check --exclude zig-pkg .
+
+  check:
+    # The job that does the real work on this side. It cross-compiles the whole
+    # COM half for two Windows architectures without linking, which type-checks
+    # every vtable signature, every GUID namespace and every cast shape against
+    # the real bindings -- and compiles the portable half for Linux, which is
+    # what keeps that half free of Win32.
+    #
+    # Debug only: this proves compilation rather than behaviour, so running it
+    # once per optimize mode would buy nothing.
+    needs: reuse
+    runs-on: nixos-do-s
+    steps:
+      - name: Check out
+        uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Compile for every supported target
+        run: nix develop -c zig build check --summary all
+
+  docs:
+    # Publishes the generated API reference to
+    # https://jeff.jcollie.page/zig-wsapi/ .
+    #
+    # This lives in the same workflow as the tests because `needs` only refers to
+    # jobs within one workflow; a separate file could not wait on them. The tests
+    # have to be green first, so a build that no longer compiles never replaces
+    # the published documentation.
+    needs: [check, test]
+    # ...and only from the default branch, or any pushed branch would publish
+    # over the live site.
+    if: ${{ forge.ref == 'refs/heads/main' }}
+    runs-on: nixos-do-s
+    steps:
+      - name: Check out
+        uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The documentation is generated from the Windows module, so this is one
+      # more place the Win32 bindings get fetched on a Linux runner. They are a
+      # lazy dependency and this is a build that needs them.
+      - name: Build the API documentation
+        run: nix develop -c zig build docs -Dtarget=x86_64-windows-gnu
+
+      # git-pages-cli uploads the directory to the pages server; nothing is
+      # committed back into the repository, so the megabytes of `sources.tar`
+      # that Zig's autodoc emits on every build do not accumulate in git history.
+      # `--upload-dir` is incremental, so a push that changed one file uploads
+      # one file. The site URL matches this repository, so the automatic Actions
+      # token authorizes it and no secret of its own is needed.
+      - name: Publish the API documentation
+        run: >
+          nix develop -c git-pages-cli https://jeff.jcollie.page/zig-wsapi/
+          --server jcollie.page
+          --token ${{ forge.token }}
+          --upload-dir zig-out/docs

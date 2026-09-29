@@ -1,0 +1,35 @@
+// SPDX-FileCopyrightText: © 2026 Jeffrey C. Ollie <jeff@ocjtech.us>
+// SPDX-License-Identifier: MIT
+
+.{
+    .name = .wasapi,
+    .version = "0.1.0",
+    .fingerprint = 0x2879cc4873338f63, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        // Generated Zig bindings for the Win32 API, which is every system call
+        // this library makes. A tarball rather than `git+https`: the repository
+        // is around 99 MB of history where a tarball of one commit is 7 MB.
+        //
+        // Lazy, so that `zig build docs` and a consumer that only wants the
+        // documentation need not fetch it. Anything that compiles the library
+        // does, which -- this being a Windows-only library -- is everything
+        // else, including `zig build check`.
+        .win32 = .{
+            .url = "https://github.com/marlersoft/zigwin32/archive/9f15c276b4e9d05afd34a10d8662a7dfc34647ea.tar.gz",
+            .hash = "win32-42.0.39-preview-mX5pFS564gPTezZn4v3TMxRnfJUrZNx1B_F2p2HKXOeG",
+            .lazy = true,
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "examples",
+        "tests",
+        "tools",
+        "LICENSES",
+        "REUSE.toml",
+        "README.md",
+    },
+}

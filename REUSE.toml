@@ -1,0 +1,12 @@
+version = 1
+SPDX-PackageName = "zig-windows-audio"
+SPDX-PackageSupplier = "Jeffrey C. Ollie <jeff@ocjtech.us>"
+SPDX-PackageDownloadLocation = "https://git.jcollie.dev/jeff/zig-wsapi"
+
+# Files whose format has nowhere to put a comment, or which are generated and
+# would lose a header the next time they were written.
+[[annotations]]
+path = ["flake.lock"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "© 2026 Jeffrey C. Ollie <jeff@ocjtech.us>"
+SPDX-License-Identifier = "MIT"

@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: © 2026 Jeffrey C. Ollie <jeff@ocjtech.us>
+# SPDX-License-Identifier: MIT
+
+# The GitHub mirror exists for this one runner.
+#
+# Forgejo is where this repository lives and where the real CI is; what it cannot
+# do is run a Windows machine. `zig build check` on the Forgejo side proves the
+# whole COM half still *type-checks*, cross-compiled for two Windows
+# architectures, which is the cheap half. This is the other half: it links and
+# executes it, which is the only way to catch a symbol that does not exist in
+# `ole32` or `avrt`, a calling convention written down wrongly, a COM vtable laid
+# out differently than declared, or apartment handling that is subtly wrong.
+#
+# There is no audio endpoint on a hosted runner, so every test that wants to
+# actually make a sound reports SkipZigTest. What runs is the whole
+# operating-system-independent suite -- the ring buffer, the channel
+# permutations, the format encoder, the sample conversions -- plus the COM tests
+# that do not need hardware: creating the device enumerator, enumerating nothing,
+# registering and unregistering a notification client, and the apartment
+# decision table. Enumerating an empty machine is worth having: it is a path that
+# has to work and is easy to get wrong.
+#
+# The audible half cannot be automated here at all. See "What the tests cover,
+# and what they cannot" in the README.
+#
+# Actions are pinned to a commit with the tag they came from in a trailing
+# comment, so that a moving tag cannot change what CI executes.
+
+name: test
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      # Not fail-fast: when something breaks in one optimize mode it is useful to
+      # know at once whether it broke in the others too. A release build in
+      # particular exercises different arithmetic in the sample converters, where
+      # a safe build would have trapped instead.
+      fail-fast: false
+      matrix:
+        optimize: [Debug, ReleaseSafe, ReleaseFast]
+    runs-on: windows-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      # No Nix here, unlike the Forgejo workflow, so the compiler comes from an
+      # action instead of from the flake's dev shell. The version is pinned to
+      # the same one `build.zig.zon` requires.
+      - name: Set up Zig
+        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
+        with:
+          version: 0.16.0
+
+      - name: Test
+        run: zig build test -Doptimize=${{ matrix.optimize }} --summary all
+
+      - name: Build for every supported target
+        run: zig build check -Doptimize=${{ matrix.optimize }} --summary all
+
+      # The examples are the worked code a reader copies, so they are built
+      # rather than only type-checked. Not run: they would either make a noise or
+      # fail for want of an endpoint, and neither tells us anything here.
+      - name: Build the examples
+        run: zig build -Doptimize=${{ matrix.optimize }} --summary all

@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: © 2026 Jeffrey C. Ollie <jeff@ocjtech.us>
+# SPDX-License-Identifier: MIT
+
+[default]
+
+[default.extend-words]
+# `wRes` and friends: the Win32 Hungarian prefixes that appear in
+# `WAVEFORMATEX` field names and in the generated bindings.
+nChannels = "nChannels"

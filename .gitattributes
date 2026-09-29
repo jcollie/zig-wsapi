@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: © 2026 Jeffrey C. Ollie <jeff@ocjtech.us>
+# SPDX-License-Identifier: MIT
+
+# Zig source must have LF line endings: the compiler rejects a carriage return
+# outside a string literal, and `zig fmt` reports every CRLF file as needing
+# reformatting. This is a Windows library, so every checkout of it is the case
+# that gets this wrong by default -- git for Windows ships with
+# `core.autocrlf = true`, and GitHub's windows runners inherit that.
+#
+# `text=auto eol=lf` stores text normalised and checks it out that way on every
+# platform. Nothing in this repository is meant to hold a carriage return.
+* text=auto eol=lf
