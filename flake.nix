@@ -41,10 +41,9 @@
       # No `packages` and no `checks`.
       #
       # There is nothing for Nix to build: the library is consumed as source
-      # through Zig's package manager, and its test binaries only do anything on
-      # Windows -- which Nix cannot produce a runnable result for. `zig build
-      # check` in CI is what stands in for a build here, and it needs only the dev
-      # shell.
+      # through Zig's package manager, and its test binaries are Windows
+      # programs. `zig build check` in CI stands in for a build, and Wine in the
+      # dev shell is what runs the tests; both need only the shell.
 
       devShells = forAllShells (
         system:
@@ -61,6 +60,17 @@
               pkgs.reuse
               pkgs.typos
               pkgs.zig_0_16
+            ]
+            # Wine, to run the Windows test binaries on Linux, and PulseAudio
+            # for `tools/wine-test.sh` to give it a null sink to play to.
+            #
+            # The WoW64 build, not plain `wine`: that one is 32-bit only and
+            # refuses an x86-64 program with "Bad EXE format". x86-64 only,
+            # because the tests are built for x86-64 Windows and a Wine on
+            # any other architecture runs that architecture's Windows programs.
+            ++ lib.optionals (system == "x86_64-linux") [
+              pkgs.pulseaudio
+              pkgs.wineWow64Packages.stable
             ];
           };
         }

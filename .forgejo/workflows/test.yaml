@@ -9,10 +9,11 @@
 #
 # This is a Windows-only library on a Linux runner, so what the jobs here can
 # prove is bounded and worth stating: the `test` job runs the
-# operating-system-independent half, and `check` type-checks the COM half by
-# cross-compiling it for two Windows architectures without linking. Running any
-# of it needs the GitHub mirror's `windows-latest` runner, and hearing any of it
-# needs a person -- see the README.
+# operating-system-independent half natively, `check` type-checks the COM half
+# by cross-compiling it for two Windows architectures without linking, and
+# `wine` runs the whole Windows suite under Wine. Wine is not Windows, so the
+# GitHub mirror's `windows-latest` runner is still the word on what Windows
+# itself does, and hearing any of it needs a person -- see the README.
 
 name: test
 
@@ -97,6 +98,26 @@ jobs:
       - name: Compile for every supported target
         run: nix develop -c zig build check --summary all
 
+  wine:
+    # The Windows test suite, run under Wine. Unlike the GitHub runner, this one
+    # has an audio endpoint -- a PulseAudio null sink that `tools/wine-test.sh`
+    # starts for the run -- so the loopback test plays a tone, records it back
+    # and checks its pitch rather than skipping. That makes it the only job that
+    # exercises playback and capture end to end.
+    #
+    # One job per optimize mode, for the same reasons as `test`.
+    needs: reuse
+    runs-on: nixos-do-s
+    strategy:
+      matrix:
+        optimize: [Debug, ReleaseSafe, ReleaseFast]
+    steps:
+      - name: Check out
+        uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Test under Wine
+        run: nix develop -c tools/wine-test.sh -Doptimize=${{ matrix.optimize }}
+
   docs:
     # Publishes the generated API reference to
     # https://jeff.jcollie.page/zig-wsapi/ .
@@ -105,7 +126,7 @@ jobs:
     # jobs within one workflow; a separate file could not wait on them. The tests
     # have to be green first, so a build that no longer compiles never replaces
     # the published documentation.
-    needs: [check, test]
+    needs: [check, test, wine]
     # ...and only from the default branch, or any pushed branch would publish
     # over the live site.
     if: ${{ forge.ref == 'refs/heads/main' }}

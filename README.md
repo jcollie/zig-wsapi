@@ -262,6 +262,7 @@ zig build check          # compile for every supported target, without linking
 zig build docs           # API reference into zig-out/docs
 zig build docs-serve     # ...and serve it at http://127.0.0.1:8000/
 zig build fuzz           # the fuzz targets, once each
+tools/wine-test.sh       # the Windows suite under Wine, on x86-64 Linux
 
 zig build run-devices    # list endpoints, volumes and sessions
 zig build run-tone -- 440 2
@@ -301,10 +302,19 @@ On **Windows** the suite adds the COM tests, the apartment handling, and
 and asserts with a Goertzel filter that the energy came back at the right pitch. That one
 test exercises the whole library at once.
 
-A hosted continuous-integration runner generally has **no audio endpoint**, so the
-playback and capture tests report `SkipZigTest` there. What the Windows job actually buys
-is that every symbol exists, the structure layouts are right, and the apartment handling
-is correct. The audible half needs a real machine, which means before a release:
+Under **Wine**, on x86-64 Linux, `tools/wine-test.sh` runs that same Windows suite. It
+gives Wine a private PulseAudio server whose only sink is a null sink, so nothing reaches
+the speakers and the loopback test still has an endpoint to play to and record back from.
+Wine's audio path is not Windows', but it is the one place the loopback test runs on every
+push, since the Forgejo workflow runs it there in every optimize mode. The script uses a
+throwaway Wine prefix and leaves `~/.wine` alone. The dev shell carries the 64-bit build
+of Wine it needs; the plain `wine` package is 32-bit only and rejects the test binaries
+with "Bad EXE format".
+
+A hosted Windows runner generally has **no audio endpoint**, so the playback and capture
+tests report `SkipZigTest` there. What the GitHub Windows job actually buys is that every
+symbol exists in real Windows DLLs, the structure layouts are right, and the apartment
+handling is correct. The audible half needs a real machine, which means before a release:
 
 - that a tone is clean and not clicking, and that a chord sounds the same through the pull
   API;
