@@ -15,6 +15,15 @@
 # GitHub mirror's `windows-latest` runner is still the word on what Windows
 # itself does, and hearing any of it needs a person -- see the README.
 
+# Every job ends by pushing what it built to the niks3 cache, which the
+# ephemeral runners substitute from, so the next run -- of any job -- does not
+# download the dev shell (Zig, Wine, PulseAudio and the rest) again. It
+# authenticates with the OIDC token Forgejo mints for a job that sets
+# `enable-openid-connect`, so no secret is involved, and the cache grants
+# writes only to `main`; the `if` skips the step everywhere else. It runs after
+# a failed step too, because Nix records only builds that succeeded, and the
+# paths fetched before a test failed are exactly what the next run wants.
+
 name: test
 
 # The workflow has to be on the default branch for the manual trigger to show
@@ -26,6 +35,7 @@ on:
 jobs:
   reuse:
     runs-on: nixos-do-s
+    enable-openid-connect: true
     steps:
       - name: Check out
         uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -36,12 +46,18 @@ jobs:
       # rather than with whatever a release of the tool does on its own.
       - name: Check REUSE compliance
         run: nix develop -c reuse lint
+      - name: Push to the cache
+        if: ${{ !cancelled() && forge.ref == 'refs/heads/main' }}
+        uses: https://git.jcollie.dev/jeff/niks3-push@3f85f501658e379783381291241c6f8315a92716
+        with:
+          server-url: https://niks3.jcollie.dev
 
   test:
     # Gated on the licensing check, so a missing SPDX header fails without
     # spending three builds on the run.
     needs: reuse
     runs-on: nixos-do-s
+    enable-openid-connect: true
     # One job per optimize mode rather than three builds in sequence, so the
     # three run concurrently and each gets its own budget -- a droplet is reaped
     # at a two hour lifetime cap, and a serial run spends that budget three
@@ -79,6 +95,11 @@ jobs:
       # and unlike `reuse` it does not honour `.gitignore`.
       - name: Check Zig formatting compliance
         run: nix develop -c zig fmt --check --exclude zig-pkg .
+      - name: Push to the cache
+        if: ${{ !cancelled() && forge.ref == 'refs/heads/main' }}
+        uses: https://git.jcollie.dev/jeff/niks3-push@3f85f501658e379783381291241c6f8315a92716
+        with:
+          server-url: https://niks3.jcollie.dev
 
   check:
     # The job that does the real work on this side. It cross-compiles the whole
@@ -91,12 +112,18 @@ jobs:
     # once per optimize mode would buy nothing.
     needs: reuse
     runs-on: nixos-do-s
+    enable-openid-connect: true
     steps:
       - name: Check out
         uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Compile for every supported target
         run: nix develop -c zig build check --summary all
+      - name: Push to the cache
+        if: ${{ !cancelled() && forge.ref == 'refs/heads/main' }}
+        uses: https://git.jcollie.dev/jeff/niks3-push@3f85f501658e379783381291241c6f8315a92716
+        with:
+          server-url: https://niks3.jcollie.dev
 
   wine:
     # The Windows test suite, run under Wine. Unlike the GitHub runner, this one
@@ -108,6 +135,7 @@ jobs:
     # One job per optimize mode, for the same reasons as `test`.
     needs: reuse
     runs-on: nixos-do-s
+    enable-openid-connect: true
     strategy:
       matrix:
         optimize: [Debug, ReleaseSafe, ReleaseFast]
@@ -117,6 +145,11 @@ jobs:
 
       - name: Test under Wine
         run: nix develop -c tools/wine-test.sh -Doptimize=${{ matrix.optimize }}
+      - name: Push to the cache
+        if: ${{ !cancelled() && forge.ref == 'refs/heads/main' }}
+        uses: https://git.jcollie.dev/jeff/niks3-push@3f85f501658e379783381291241c6f8315a92716
+        with:
+          server-url: https://niks3.jcollie.dev
 
   docs:
     # Publishes the generated API reference to
@@ -131,6 +164,7 @@ jobs:
     # over the live site.
     if: ${{ forge.ref == 'refs/heads/main' }}
     runs-on: nixos-do-s
+    enable-openid-connect: true
     steps:
       - name: Check out
         uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -153,3 +187,9 @@ jobs:
           --server jcollie.page
           --token ${{ forge.token }}
           --upload-dir zig-out/docs
+
+      - name: Push to the cache
+        if: ${{ !cancelled() && forge.ref == 'refs/heads/main' }}
+        uses: https://git.jcollie.dev/jeff/niks3-push@3f85f501658e379783381291241c6f8315a92716
+        with:
+          server-url: https://niks3.jcollie.dev
