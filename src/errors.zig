@@ -152,8 +152,8 @@ test "the per-operation sets are all subsets of AnyError" {
     // not name, and a caller switching exhaustively on `AnyError` would
     // silently stop seeing it.
     inline for (.{ Error, OpenError, WriteError, ReadError, StreamError, SessionError }) |Set| {
-        inline for (@typeInfo(Set).error_set.?) |e| {
-            const member: AnyError = @field(anyerror, e.name);
+        inline for (@typeInfo(Set).error_set.error_names.?) |name| {
+            const member: AnyError = @field(anyerror, name);
             _ = member catch {};
         }
     }

@@ -280,7 +280,7 @@ test "a full ring takes what it can and reports how much" {
     var ring: Ring = try .init(std.testing.allocator, min_frames, 1);
     defer ring.deinit(std.testing.allocator);
 
-    const plenty = [_]f32{1} ** (min_frames + 500);
+    const plenty: [min_frames + 500]f32 = @splat(1);
     try std.testing.expectEqual(min_frames, ring.push(&plenty));
     try std.testing.expectEqual(@as(u32, 0), ring.writable());
 
@@ -325,7 +325,7 @@ test "writing across the wraparound preserves order" {
     defer ring.deinit(std.testing.allocator);
 
     // Advance the indices most of the way round, so the next write must wrap.
-    const filler = [_]f32{0} ** (min_frames - 3);
+    const filler: [min_frames - 3]f32 = @splat(0);
     _ = ring.push(&filler);
     var sink: [min_frames - 3]f32 = undefined;
     _ = ring.pop(&sink);
@@ -358,7 +358,7 @@ test "a completely starved ring yields a whole cycle of silence" {
 
     var out: [8]f32 = @splat(-1);
     try std.testing.expectEqual(@as(u32, 4), ring.popOrSilence(&out));
-    try std.testing.expectEqualSlices(f32, &(.{0} ** 8), &out);
+    try std.testing.expectEqualSlices(f32, &@as([8]f32, @splat(0)), &out);
 }
 
 test "reset drops what is queued without disturbing the accounting" {

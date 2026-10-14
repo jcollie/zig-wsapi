@@ -486,7 +486,7 @@ test "a map that cannot be a mask is refused" {
     // duplicated would be looking for a repeated name that is not there.
     try std.testing.expectError(error.MonoWithOthers, validate(&.{ .mono, .fc }));
 
-    const too_many = [_]Channel{.fl} ** (max_channels + 1);
+    const too_many: [max_channels + 1]Channel = @splat(.fl);
     try std.testing.expectError(error.TooManyChannels, validate(&too_many));
 
     // And every conventional layout passes.

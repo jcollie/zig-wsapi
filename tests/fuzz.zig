@@ -10,7 +10,7 @@
 //!
 //! ## Where these can be fuzzed
 //!
-//! Zig 0.16 answers `--fuzz` on Windows with "not yet implemented for windows", so the
+//! Zig 0.17 answers `--fuzz` on Windows with "not yet implemented for windows", so the
 //! machine that can *run* this library is not the machine that can fuzz it.
 //!
 //! That is survivable only because every target here is in the operating-system-

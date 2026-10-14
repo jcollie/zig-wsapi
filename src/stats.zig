@@ -429,8 +429,8 @@ test "stats print as a line worth logging" {
     // line stays short enough to read.
     const troubled: Stats = .{ .cycles = 1, .underrun_frames = 480, .reopens = 2 };
     const line = try std.fmt.bufPrint(&buf, "{f}", .{troubled});
-    try std.testing.expect(std.mem.indexOf(u8, line, "480 underrun frames") != null);
-    try std.testing.expect(std.mem.indexOf(u8, line, "2 reopens") != null);
+    try std.testing.expect(std.mem.find(u8, line, "480 underrun frames") != null);
+    try std.testing.expect(std.mem.find(u8, line, "2 reopens") != null);
 }
 
 test {

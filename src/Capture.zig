@@ -653,7 +653,7 @@ fn deliver(
     const samples = @as(usize, frames) * channel_count;
     if (samples > self.stage.len) return; // a packet larger than was planned for
 
-    const silent = flags & @as(u32, @intCast(@intFromEnum(win32.AUDCLNT_BUFFERFLAGS_SILENT))) != 0;
+    const silent = flags & @as(u32, @intCast(@backingInt(win32.AUDCLNT_BUFFERFLAGS_SILENT))) != 0;
 
     if (silent or data == null) {
         // The engine says the buffer is silent and its contents are meaningless, so

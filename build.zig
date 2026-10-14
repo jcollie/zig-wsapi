@@ -87,6 +87,11 @@ pub fn build(b: *std.Build) void {
             .imports = &.{.{ .name = "wasapi-portable", .module = portable }},
         }),
         .filters = if (fuzz_filter) |f| &.{f} else &.{},
+        // The self-hosted backend, which Debug uses by default, emits no coverage
+        // instrumentation, and `--fuzz` then fails with "pcs_len was zero". LLVM is the
+        // only backend the fuzzer can steer by. `build.zig` cannot tell whether `--fuzz`
+        // was passed, so it is always on here, at a few seconds of extra compile time.
+        .use_llvm = true,
     });
     test_step.dependOn(&b.addRunArtifact(fuzz_tests).step);
 
@@ -119,7 +124,7 @@ pub fn build(b: *std.Build) void {
         const run_cmd = b.addRunArtifact(exe);
         run_cmd.step.dependOn(b.getInstallStep());
         run_cmd.stdio = .inherit;
-        if (b.args) |args| run_cmd.addArgs(args);
+        run_cmd.addPassthruArgs();
         const run_step = b.step(b.fmt("run-{s}", .{example.name}), example.desc);
         run_step.dependOn(&run_cmd.step);
 
@@ -160,8 +165,9 @@ pub fn build(b: *std.Build) void {
     });
 
     const run_docs_server = b.addRunArtifact(docs_server);
-    run_docs_server.step.dependOn(&install_docs.step);
-    run_docs_server.addArg(b.getInstallPath(.prefix, "docs"));
+    // The emitted directory rather than the installed one: an install path cannot be
+    // asked for while the build is still being configured.
+    run_docs_server.addDirectoryArg(docs_obj.getEmittedDocs());
     run_docs_server.addArg(b.fmt("{d}", .{docs_port}));
     // The server runs until interrupted, so its output has to reach the terminal rather
     // than being captured by the build runner.

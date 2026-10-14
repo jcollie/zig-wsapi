@@ -67,7 +67,7 @@ pub const s_false: HRESULT = .fromInt(1);
 /// name, and it is HTML Help's, `0x8000100D` -- a different code that no audio
 /// interface returns. Matching on it made a machine with no sound card look
 /// like an `Unexpected` failure rather than the ordinary answer it is.
-pub const e_notfound: HRESULT = fromWin32(@intFromEnum(win32.ERROR_NOT_FOUND));
+pub const e_notfound: HRESULT = fromWin32(@backingInt(win32.ERROR_NOT_FOUND));
 
 /// `HRESULT_FROM_WIN32`: a Win32 error code carried in an `HRESULT`, with the
 /// failure bit set and `FACILITY_WIN32` (7) as the facility.

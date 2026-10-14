@@ -116,13 +116,13 @@ fn serve(
     docs_dir: Io.Dir,
 ) !void {
     const target = request.head.target;
-    const path_end = std.mem.indexOfAny(u8, target, "?#") orelse target.len;
+    const path_end = std.mem.findAny(u8, target, "?#") orelse target.len;
     var path = target[0..path_end];
     if (std.mem.startsWith(u8, path, "/")) path = path[1..];
     if (path.len == 0) path = "index.html";
 
     // The documentation directory is the whole world this server knows about.
-    if (std.mem.indexOf(u8, path, "..") != null or std.fs.path.isAbsolute(path)) {
+    if (std.mem.find(u8, path, "..") != null or std.fs.path.isAbsolute(path)) {
         return request.respond("bad request\n", .{ .status = .bad_request });
     }
 

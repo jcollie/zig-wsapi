@@ -39,10 +39,10 @@ comptime {
 /// `std` by way of a re-export and takes a long time to come back.
 fn force(comptime T: type) void {
     @setEvalBranchQuota(200_000);
-    inline for (comptime std.meta.declarations(T)) |decl| {
-        _ = &@field(T, decl.name);
-        if (@TypeOf(@field(T, decl.name)) == type) {
-            forceType(@field(T, decl.name));
+    inline for (comptime std.meta.declarations(T)) |name| {
+        _ = &@field(T, name);
+        if (@TypeOf(@field(T, name)) == type) {
+            forceType(@field(T, name));
         }
     }
 }
@@ -54,8 +54,8 @@ fn forceType(comptime T: type) void {
             // Resolving the size resolves every field, which is what an object build
             // otherwise never does.
             _ = @sizeOf(T);
-            inline for (comptime std.meta.declarations(T)) |decl| {
-                _ = &@field(T, decl.name);
+            inline for (comptime std.meta.declarations(T)) |name| {
+                _ = &@field(T, name);
             }
         },
         else => {},

@@ -1140,7 +1140,7 @@ fn fillChunk(engine: *Engine, frames: u32) errors.Error!void {
     if (!self.active.load(.acquire)) {
         try com.check("IAudioRenderClient::ReleaseBuffer", render.ReleaseBuffer(
             frames,
-            @intCast(@intFromEnum(win32.AUDCLNT_BUFFERFLAGS_SILENT)),
+            @intCast(@backingInt(win32.AUDCLNT_BUFFERFLAGS_SILENT)),
         ));
         engine.written_this_activation += frames;
         self.frames_written.store(engine.written_this_activation, .release);

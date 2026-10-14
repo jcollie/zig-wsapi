@@ -36,7 +36,7 @@ stream.drain(io, two_seconds);
 
 ## Requirements
 
-- Zig 0.16
+- Zig 0.17
 - Windows Vista or later. `IAudioClient3`'s low-latency path needs Windows 10 1703 and
   falls back gracefully without it.
 - Nothing else. No libc, and no `linkSystemLibrary` calls: Zig links `ole32` and `avrt`
@@ -273,7 +273,7 @@ zig build run-loopback -- 5 output.wav
 
 `zig build docs` needs a Windows target, because the module it documents is
 Windows-only -- on another host, `zig build docs -Dtarget=x86_64-windows-gnu`. And
-`--fuzz` is not implemented for Windows in Zig 0.16, so the fuzz targets run once each
+`--fuzz` is not implemented for Windows in Zig 0.17, so the fuzz targets run once each
 here and are actually fuzzed on the Linux runner, which is why they live in the portable
 half.
 

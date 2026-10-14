@@ -16,16 +16,16 @@
 //!
 //! That is forced rather than preferred, for three separate reasons:
 //!
-//!   * **`std.Io` cannot express the wait.** `std.Io.Operation` in 0.16 is exactly
-//!     file reads, file writes, device I/O control and network receives. There is
-//!     no operation that waits on a Windows event `HANDLE`, and no vtable entry
-//!     that could be adapted into one. The render thread therefore cannot be an
+//!   * **`std.Io` cannot express the wait.** `std.Io.Operation` in 0.17 is exactly
+//!     file reads, file writes, device I/O control and network sends and receives.
+//!     There is no operation that waits on a Windows event `HANDLE`, and no vtable
+//!     entry that could be adapted into one. The render thread therefore cannot be an
 //!     `Io` task at all.
 //!   * **Waking an `Io` from a foreign thread is not safe in general.** `Io.Event.set`
 //!     and `Io.Condition.signal` go through the implementation's `futexWake`, and a
 //!     fiber-based implementation's version reaches for the current task -- which,
 //!     on an OS thread that implementation never created, is not a defined thing.
-//!     It happens that `std.Io.Evented` is `void` on Windows in 0.16, so today the
+//!     It happens that `std.Io.Evented` is `void` on Windows in 0.17, so today the
 //!     only implementation there is `Io.Threaded`, whose `futexWake` would be fine.
 //!     A library should not encode that.
 //!   * **The priority has to stay on our thread.** `AvSetMmThreadCharacteristicsW`

@@ -59,7 +59,7 @@
               pkgs.radicle-node
               pkgs.reuse
               pkgs.typos
-              pkgs.zig_0_16
+              pkgs.zig_0_17
             ]
             # Wine, to run the Windows test binaries on Linux, and PulseAudio
             # for `tools/wine-test.sh` to give it a null sink to play to.

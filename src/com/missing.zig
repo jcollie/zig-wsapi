@@ -99,16 +99,16 @@ test "the speaker bits ascend in declaration order" {
     // not. This is that test.
     var previous: u32 = 0;
     for (std.enums.values(Speaker)) |speaker| {
-        const bit = @intFromEnum(speaker);
+        const bit = @backingInt(speaker);
         try std.testing.expect(bit > previous);
         previous = bit;
     }
 
     // And the low four are the ones every layout starts with.
-    try std.testing.expectEqual(@as(u32, 0x1), @intFromEnum(Speaker.front_left));
-    try std.testing.expectEqual(@as(u32, 0x2), @intFromEnum(Speaker.front_right));
-    try std.testing.expectEqual(@as(u32, 0x4), @intFromEnum(Speaker.front_center));
-    try std.testing.expectEqual(@as(u32, 0x8), @intFromEnum(Speaker.low_frequency));
+    try std.testing.expectEqual(@as(u32, 0x1), @backingInt(Speaker.front_left));
+    try std.testing.expectEqual(@as(u32, 0x2), @backingInt(Speaker.front_right));
+    try std.testing.expectEqual(@as(u32, 0x4), @backingInt(Speaker.front_center));
+    try std.testing.expectEqual(@as(u32, 0x8), @backingInt(Speaker.low_frequency));
 }
 
 test "channel.zig's hand-written speaker bits are the ones zigwin32 has" {
@@ -227,12 +227,12 @@ test "the Speaker enum here and channel.zig's order agree" {
     var buf: [channel.max_channels]channel.Channel = undefined;
 
     var every_bit: u32 = 0;
-    for (std.enums.values(Speaker)) |speaker| every_bit |= @intFromEnum(speaker);
+    for (std.enums.values(Speaker)) |speaker| every_bit |= @backingInt(speaker);
 
     const decoded = try channel.mapFromMask(every_bit, &buf);
     try std.testing.expectEqual(std.enums.values(Speaker).len, decoded.len);
     for (std.enums.values(Speaker), decoded) |speaker, ch| {
-        try std.testing.expectEqual(@as(u32, @intFromEnum(speaker)), ch.mask());
+        try std.testing.expectEqual(@as(u32, @backingInt(speaker)), ch.mask());
     }
 }
 

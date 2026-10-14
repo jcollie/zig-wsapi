@@ -167,7 +167,7 @@ fn setVolume(
 
         var name_buf: [wasapi.Endpoint.max_name_len]u8 = undefined;
         const name = try device.label(&name_buf);
-        if (std.ascii.indexOfIgnoreCase(name, wanted) == null) continue;
+        if (std.ascii.findIgnoreCase(name, wanted) == null) continue;
 
         try session.setVolume(device, percent / 100);
         try stdout.print("{s} is now at {f}\n", .{ name, try session.volume(device) });
